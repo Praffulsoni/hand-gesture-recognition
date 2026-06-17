@@ -6,9 +6,6 @@ The core engine tracks 21 landmark configurations across **18 distinct gesture c
 
 ---
 
-## 📈 Engineering Evolution & Architectural Breakthroughs
-
-The development lifecycle of this project progressed through a rigorous optimization pipeline, transitioning from a localized, translation-dependent machine learning prototype into a production-grade, high-definition desktop interface.
 
 ## 📈 Engineering Evolution & Architectural Breakthroughs
 
