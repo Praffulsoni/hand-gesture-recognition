@@ -79,3 +79,4 @@ The repository is organized into distinct segments representing the lifecycle of
 3. Ensure your phone camera link (like Iriun) is active over USB-C, and run the production engine:
     ```bash
     python test_camera.py
+    Press Esc at any time to smoothly terminate the fullscreen application.
