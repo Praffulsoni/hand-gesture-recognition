@@ -6,33 +6,32 @@ The core engine tracks 21 landmark configurations across **18 distinct gesture c
 
 ---
 
-## 📈 The Engineering Evolution: From Prototype to Production
+## 📈 Engineering Evolution & Architectural Breakthroughs
 
-This project underwent a radical architecture migration to transition from a localized, translation-dependent machine learning prototype into a production-grade, highly aesthetic desktop interface.
+The development lifecycle of this project progressed through a rigorous optimization pipeline, transitioning from a localized, translation-dependent machine learning prototype into a production-grade, high-definition desktop interface.
 
-### Phase 1: The ChatGPT Baseline (The Core ML Pipeline)
-* **The Starting Point:** The initial implementation established a highly accurate machine learning environment. After rigorous benchmarking across multiple architectures (including Random Forest, SVM, XGBoost, and PyTorch Deep Networks), a **Scikit-Learn Multi-Layer Perceptron (MLP) Classifier** was selected as the champion model, hitting **91.27% accuracy** over 18 gesture classes.
-* **The Critical Blocker:** When entering real-time inference via OpenCV, **the classifier collapsed**, predicting the `two_up` gesture class for almost every hand position. 
+### Phase 1: Algorithmic Architecture Optimization & Benchmarking
+The initial phase focused on building a highly accurate machine learning environment. After conducting structural benchmarking across multiple architectures—including Random Forest, Support Vector Machines (SVM), XGBoost, and PyTorch Deep Networks—a **Multi-Layer Perceptron (MLP) Classifier** was engineered as the champion model, achieving a peak validation accuracy of **91.27%** over 18 gesture classes.
 
-### Phase 2: The Gemini Takeover (Root Cause Analysis & Engineering Breakthroughs)
-Upon migrating the codebase development to Gemini, we systematically diagnosed and resolved the systemic integration issues through a multi-tiered engineering sprint:
+### Phase 2: Resolving Real-Time Inference Obstacles (Systemic Engineering)
+Transitioning the trained model weights into a live, real-time video stream exposed critical edge cases. The following multi-tiered engineering sprints were systematically implemented to resolve these runtime bottlenecks:
 
-1. **The Normalization Mismatch (Data Correction):** We reverse-engineered the raw dataset generation script and discovered that while the training data was tightly bound via custom geometric operations, the live webcam pipeline was feeding un-normalized screen coordinates ($0.0$ to $1.0$). This spatial dependency meant that moving or scaling the hand instantly broke inference.
-   * *The Fix:* We ported the precise mathematical transformation directly into the real-time pipeline, zero-centering all points relative to the wrist origin and scaling via the maximum Euclidean distance vector:
+1. **Mathematical Transformation for Scale and Translation Invariance:**
+   During initial live testing, spatial dependencies caused the model to default to a singular gesture class (`two_up`) when the hand shifted orientation. The root cause was a coordinate system mismatch: the training data was tightly bound, but the live pipeline fed raw, absolute screen positions ($0.0$ to $1.0$). 
+   * *The Engineering Fix:* Designed and injected a precise spatial transformation directly into the real-time pipeline. By zero-centering all 21 landmarks relative to the wrist origin and scaling the coordinates via the maximum Euclidean distance vector, the system became entirely **translation-invariant** and **scale-invariant**:
      $$\text{Features}_i = \frac{\mathbf{x}_i - \mathbf{x}_{\text{wrist}}}{\text{max}(\|\mathbf{x} - \mathbf{x}_{\text{wrist}}\|)}$$
-     This rendered the model entirely **translation-invariant** and **scale-invariant**.
 
-2. **Temporal Prediction Smoothing (Eliminating Jitter):**
-   Even with high static accuracy, frame-by-frame coordinate twitching caused the user interface text to flicker rapidly.
-   * *The Fix:* Implemented a rolling `collections.deque` queue buffer (Size: 12 frames) coupled with a `Counter` majority-voting filter. By displaying only the statistical mode of recent frames, anomalous flickering was completely dampened, producing a rock-solid UI output.
+2. **Temporal Prediction Smoothing (Dampening Micro-Jitter):**
+   Even with high static accuracy, frame-by-frame coordinate twitching from the camera sensor caused rapid flickering in the user interface.
+   * *The Engineering Fix:* Implemented a temporal filtering mechanism utilizing a rolling `collections.deque` window (Size: 12 frames) coupled with a `Counter` majority-voting filter. By displaying only the statistical mode of recent predictions, anomalous flickering was completely eliminated, producing a stabilized UI output.
 
-3. **Bypassing OpenCV GUI Constraints via Pygame (Premium UX Overhaul):**
-   OpenCV's primitive, pixelated fonts and harsh block overlays gave the application a basic "utility-tool" appearance.
-   * *The Fix:* We completely bypassed OpenCV's display layer and rebuilt the entire front-end window in **Pygame**. This allowed us to support anti-aliased typography, hardware-accelerated rendering, and elegant translucent **Glassmorphism container panels** that float naturally over the camera feed.
+3. **Advanced Pygame UX Framework Overhaul:**
+   Standard computer vision display libraries severely limited user interface capabilities, rendering basic, pixelated text and harsh block overlays.
+   * *The Engineering Fix:* Completely bypassed legacy display pipelines and built a hardware-accelerated presentation window from the ground up in **Pygame**. This layout natively supports anti-aliased typography, smooth canvas scaling, and elegant translucent **Glassmorphism container panels** that float over the camera feed.
 
-4. **Hardware-Level Video Optimization (LinkedIn Demo Readiness):**
-   Low-resolution laptop webcams produced blurry silhouettes that degraded visual value for a professional portfolio presentation.
-   * *The Fix:* Wired a high-definition iPhone camera module stream directly into Python via an **Iriun USB-C hardware layer driver**, running seamlessly through Windows Microsoft Media Foundation (`cv2.CAP_MSMF`) at a native screen-matched resolution.
+4. **Hardware-Level Video Optimization:**
+   Low-resolution laptop webcams introduced severe motion blur and artifacting, dropping tracking precision during rapid gestures.
+   * *The Engineering Fix:* Integrated a high-definition external camera module via an **Iriun USB-C hardware layer driver**, running seamlessly through the Windows Microsoft Media Foundation (`cv2.CAP_MSMF`) backend at a native screen-matched resolution ($1280 \times 720$).
 
 ---
 
