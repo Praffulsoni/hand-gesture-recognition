@@ -98,7 +98,7 @@ The repository is organized into distinct segments representing the lifecycle of
    git clone https://github.com/Praffulsoni/hand-gesture-recognition.git
 2. Activate your virtual environment and install the required dependencies:
     ```bash
-    pip install -r requirements.txt
+    pip install -r requirement.txt
 3. Ensure your phone camera link (like Iriun) is active over USB-C, and run the production engine:
     ```bash
     python test_camera.py
