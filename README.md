@@ -51,6 +51,16 @@ The project repository includes your full comparative experimentation history. T
 
 ---
 
+## 🛠️ Tech Stack & Core Dependencies
+
+* **Core Language:** Python 3.11
+* **Computer Vision & Spatial Tracking:** MediaPipe Hands API, OpenCV (via Microsoft Media Foundation `cv2.CAP_MSMF`)
+* **Machine Learning Framework:** Scikit-Learn (Multi-Layer Perceptron Network Architecture), Joblib
+* **Graphics & User Interface Engine:** Pygame (Hardware-Accelerated Canvas Rendering)
+* **Mathematical Operations:** NumPy, Math
+
+---
+
 ## 📂 Core Workspace Architecture
 
 The repository is organized into distinct segments representing the lifecycle of the project:
@@ -74,8 +84,8 @@ The repository is organized into distinct segments representing the lifecycle of
    cd YOUR_REPO
 2. Activate your virtual environment and install the required dependencies:
     ```bash
-    pip install opencv-python mediapipe joblib pygame numpy scikit-learn
+    pip install -r requirements.txt
 3. Ensure your phone camera link (like Iriun) is active over USB-C, and run the production engine:
     ```bash
     python test_camera.py
-    Press Esc at any time to smoothly terminate the fullscreen application.
+Press Esc at any time to smoothly terminate the fullscreen application.
