@@ -10,8 +10,26 @@ The core engine tracks 21 landmark configurations across **18 distinct gesture c
 
 The development lifecycle of this project progressed through a rigorous optimization pipeline, transitioning from a localized, translation-dependent machine learning prototype into a production-grade, high-definition desktop interface.
 
-### Phase 1: Algorithmic Architecture Optimization & Benchmarking
-The initial phase focused on building a highly accurate machine learning environment. After conducting structural benchmarking across multiple architectures—including Random Forest, Support Vector Machines (SVM), XGBoost, and PyTorch Deep Networks—a **Multi-Layer Perceptron (MLP) Classifier** was engineered as the champion model, achieving a peak validation accuracy of **91.27%** over 18 gesture classes.
+## 📈 Engineering Evolution & Architectural Breakthroughs
+
+The development lifecycle of this project progressed through a rigorous optimization pipeline, transitioning from a localized, translation-dependent machine learning prototype into a production-grade, high-definition desktop interface.
+
+### Phase 1: Deep Architectural Exploration, Hyperparameter Tuning, and Iterative Data Scaling
+The baseline of this project was forged through an intensive, highly iterative machine learning optimization sprint. Rather than blindly feeding data into standard algorithms, the training workflow was treated as a rigorous empirical study characterized by three distinct engineering phases:
+
+1. **Iterative Dataset Scaling & Stress-Testing:** 
+   To evaluate model resilience and capacity, testing was systematically scaled through multi-stage data expansions. The training pipelines were baseline-tested at 1,000 samples per class, then scaled to 2,000, 5,000, and ultimately pushed past 10,000+ samples per class—culminating in a massive, comprehensive production dataset of over 180,000 total localized feature frames.
+
+2. **Feature Engineering Iterations (v1 through v4):** 
+   Extensive feature expansion experiments were executed across multiple custom-generated datasets. Built and evaluated models against variations that injected hand-crafted parameters—including explicit fingertip joint flex values, cross-finger spread vectors, and finger bend angles—carefully cross-referencing **Loss Curves** and detailed **Confusion Matrices** to isolate precision drops, prevent overfitting, and eliminate false-positive inter-class bleeding.
+
+3. **Hyperparameter Tuning & Hidden Layer Manipulation:** 
+   To find the ultimate mathematical boundaries for the 18 distinct gesture classes, the structural topography of the Multi-Layer Perceptron (MLP) was heavily manipulated. This involved aggressively playing around with hidden layer depths, altering neuron allocations per layer, testing different activation functions, and tuning regularization parameters to maximize gradient descent efficiency.
+
+4. **Hardware Acceleration Layer Integration:** 
+   Processing a matrix of 180,000 samples across deep configurations pushed standard CPU limits. To optimize execution, native GPU training capabilities were integrated, leveraging dedicated hardware acceleration layers to dramatically reduce training iteration runtimes, speed up hyperparameter search velocity, and stabilize convergence tracking.
+
+Through this exhaustive evaluation across Random Forest, Support Vector Machines (SVM), XGBoost, and deep architectures, the finely-tuned **Multi-Layer Perceptron (MLP) Neural Network** emerged as the absolute champion, striking the perfect balance between inference latency and a peak validation accuracy of **91.27%**.
 
 ### Phase 2: Resolving Real-Time Inference Obstacles (Systemic Engineering)
 Transitioning the trained model weights into a live, real-time video stream exposed critical edge cases. The following multi-tiered engineering sprints were systematically implemented to resolve these runtime bottlenecks:
