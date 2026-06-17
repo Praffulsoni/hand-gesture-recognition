@@ -1,0 +1,43 @@
+=====================================
+BASELINE MODELS (42 FEATURES)
+=====================================
+
+Dataset:
+- 18 Classes
+- 5000 Samples/Class
+- Total Samples = 90000
+
+Features:
+- 21 Hand Landmarks
+- x,y coordinates only
+- Total Features = 42
+
+=====================================
+RANDOM FOREST
+=====================================
+
+Accuracy: 90.18%
+
+=====================================
+SVM (RBF)
+=====================================
+
+Accuracy: 90.88%
+Training Time: 69.39 sec
+Prediction Time: 32.31 sec
+
+=====================================
+MLP (128,64)
+=====================================
+
+Accuracy: 91.27%
+Training Time: 71.55 sec
+Prediction Time: 0.03 sec
+
+=====================================
+CURRENT WINNER
+=====================================
+
+MLP (128,64)
+
+Accuracy: 91.27%

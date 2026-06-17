@@ -1,0 +1,12 @@
+# Ignore local environment tracking folders
+venv/
+__pycache__/
+*.pyc
+
+# Ignore ALL massive local dataset spreadsheets automatically
+*.csv
+
+# Ignore hardware/driver specific setup test logs
+*.log
+Thumbs.db
+.DS_Store
