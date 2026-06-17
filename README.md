@@ -80,8 +80,7 @@ The repository is organized into distinct segments representing the lifecycle of
 
 1. Clone the repository to your workspace:
    ```bash
-   git clone [https://github.com/YOUR_USERNAME/YOUR_REPO.git](https://github.com/YOUR_USERNAME/YOUR_REPO.git)
-   cd YOUR_REPO
+   git clone https://github.com/Praffulsoni/hand-gesture-recognition.git
 2. Activate your virtual environment and install the required dependencies:
     ```bash
     pip install -r requirements.txt
