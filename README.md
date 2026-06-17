@@ -24,7 +24,7 @@ The baseline of this project was forged through an intensive, highly iterative m
    To find the ultimate mathematical boundaries for the 18 distinct gesture classes, the structural topography of the Multi-Layer Perceptron (MLP) was heavily manipulated. This involved aggressively playing around with hidden layer depths, altering neuron allocations per layer, testing different activation functions, and tuning regularization parameters to maximize gradient descent efficiency.
 
 4. **Hardware Acceleration Layer Integration:** 
-   Processing a matrix of 180,000 samples across deep configurations pushed standard CPU limits. To optimize execution, native GPU training capabilities were integrated, leveraging dedicated hardware acceleration layers to dramatically reduce training iteration runtimes, speed up hyperparameter search velocity, and stabilize convergence tracking.
+   Processing a matrix of 180,000 samples across deep configurations pushed standard CPU limits. To optimize execution, GPU-accelerated experiments were conducted using PyTorch to evaluate deeper architectures and accelerate training workflows, leveraging dedicated hardware acceleration layers to dramatically reduce training iteration runtimes, speed up hyperparameter search velocity, and stabilize convergence tracking.
 
 Through this exhaustive evaluation across Random Forest, Support Vector Machines (SVM), XGBoost, and deep architectures, the finely-tuned **Multi-Layer Perceptron (MLP) Neural Network** emerged as the absolute champion, striking the perfect balance between inference latency and a peak validation accuracy of **91.27%**.
 
