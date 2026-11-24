@@ -9,7 +9,7 @@
 
 **Aura** recognises **18 static hand gestures** live from a webcam. **MediaPipe Hands** finds 21 landmarks on your hand, those landmarks are normalised into a 42-number feature vector, and a lightweight **scikit-learn MLP** classifies the gesture on every frame. The result is shown in a full-screen **Pygame** interface with translucent "glassmorphism" panels, a skeleton overlay, a stability meter and a detection history.
 
-Five model families were benchmarked (Random Forest, SVM, XGBoost, PyTorch and an sklearn MLP). The **MLP won with 91.27% test accuracy** and predicts in milliseconds, which makes it a good fit for real-time use.
+Five model families were benchmarked (Random Forest, SVM, XGBoost, PyTorch and an sklearn MLP) on an 80/20 stratified hold-out split. The deployed model is a **scikit-learn `MLPClassifier`** (42 → 128 → 64 → 18, ReLU, Adam) saved with joblib. It reaches **91.27% test accuracy** (macro F1 0.914) and takes under a millisecond per frame, which makes it a good fit for a live video loop.
 
 ---
 
@@ -53,7 +53,7 @@ Five model families were benchmarked (Random Forest, SVM, XGBoost, PyTorch and a
 
 ## ✋ Supported Gestures
 
-The model recognises the 18 gesture classes of the [HaGRID](https://github.com/hukenovs/hagrid) dataset:
+The model recognises 18 gesture classes. The class names and the annotation file layout match the [HaGRID](https://github.com/hukenovs/hagrid) dataset:
 
 | | | | |
 | :--- | :--- | :--- | :--- |
@@ -69,10 +69,11 @@ The model recognises the 18 gesture classes of the [HaGRID](https://github.com/h
 
 ## ✨ Features
 
-- 🎯 **18-class static gesture recognition** at 91.27% test accuracy
-- ⚡ **Real-time inference** using a small MLP. Predicting all 18,000 test samples takes about 0.03 s.
+- 🎯 **18-class static gesture recognition** at 91.27% test accuracy (80/20 stratified hold-out)
+- ⚡ **Fast inference** using a small MLP: about 0.7 ms per frame, and about 0.03 s for all 18,000 test samples of the 90k baseline
+- 🎞️ **Display loop capped at 60 FPS** with `clock.tick(60)`. The live FPS is shown on screen but has not been formally benchmarked.
 - 📐 **Translation- and scale-invariant features**, so the hand can be anywhere in the frame and at any distance
-- 🧘 **Flicker-free output** thanks to a 12-frame majority-vote buffer
+- 🧘 **Steadier output** thanks to a 12-frame majority-vote buffer
 - 🖥️ **Full-screen Pygame UI** with anti-aliased text, translucent cards and a mirrored, selfie-style camera view
 - 🦴 **Live hand skeleton overlay** (orange joints, black bones)
 - 📊 **On-screen telemetry:** engine FPS, tracking status, signal-stability meter and the last 3 detected gestures
@@ -83,9 +84,13 @@ The model recognises the 18 gesture classes of the [HaGRID](https://github.com/h
 
 ## 🔍 How It Works
 
+### 0. Training data
+
+The model was trained on **180,000 pre-annotated hand-landmark samples** (18 classes × 10,000, exactly balanced), loaded from one JSON annotation file per gesture by `create_dataset.py`. The data was **not recorded with my own webcam**. For each sample, the first hand's 21 landmarks are normalised (see below) and written to `dataset.csv`. The first 10,000 valid samples per class are kept, in file order.
+
 ### 1. Landmark extraction
 
-MediaPipe Hands returns 21 landmarks per hand (wrist, plus 4 joints for each finger). Only the `x` and `y` coordinates are used, giving **21 × 2 = 42 values**.
+MediaPipe Hands returns 21 landmarks per hand (wrist, plus 4 joints for each finger). Only the `x` and `y` coordinates are used, giving **21 × (x, y) = 42 features**. The `z` (depth) coordinate is not used.
 
 ```
          8   12  16  20        ← fingertips
@@ -112,7 +117,7 @@ $$\mathbf{f}_i = \frac{\mathbf{p}_i - \mathbf{p}_{\text{wrist}}}{\max_j \lVert \
 - **Translation invariant:** the wrist is always at `(0, 0)`.
 - **Scale invariant:** the hand always fits inside a unit circle.
 
-The **same function** is used in `create_dataset.py` (training) and `test_camera.py` (live inference). This is what makes the live predictions match the offline accuracy.
+The **same maths** is used in `create_dataset.py` (training) and `test_camera.py` (live inference), so live inputs have the same form as the training data. Live accuracy itself has not been measured.
 
 ### 3. Classification
 
@@ -125,7 +130,16 @@ The **same function** is used in `create_dataset.py` (training) and `test_camera
 | Hidden 2 | 64 | ReLU |
 | Output | 18 | Softmax |
 
-Trained with the Adam optimiser for up to 100 iterations (`random_state=42`).
+Training settings (read from the saved model):
+
+- Adam optimiser, learning rate 0.001 (constant)
+- Batch size 200 (sklearn's `"auto"`)
+- L2 penalty `alpha=0.0001`
+- `max_iter=100`. All 100 epochs ran, so training stopped at the limit rather than at convergence.
+- No early stopping, no dropout, no batch norm
+- `random_state=42`
+
+The model is saved with `joblib.dump` and loaded with `joblib.load`. It is **not** a PyTorch model.
 
 ### 4. Temporal smoothing
 
@@ -135,34 +149,43 @@ Single-frame predictions can jump around because of sensor noise. The last **12 
 
 ## 📊 Model Benchmarks
 
-All models use an **80/20 stratified train/test split** with `random_state=42`. The numbers come from two runs:
+All accuracies are **test accuracy** on an **80/20 stratified hold-out split** (`random_state=42`). There is no separate validation set. The numbers come from two different runs:
 
-- **Baseline (90k):** [`results_summary.txt`](results_summary.txt), 18 classes × 5,000 samples = 90,000 samples (18,000 test).
-- **Full (180k):** `dataset.csv`, 18 classes × 10,000 samples = 180,000 samples (36,000 test). Times are from an RTX 4060 Laptop GPU machine (PyTorch on GPU, the rest on CPU).
+- **Earlier 90k run** (recorded in [`results_summary.txt`](results_summary.txt)): 18 classes × 5,000 samples = 90,000 samples, 18,000 test. Random Forest, SVM and the MLP's 71.55 s / 0.03 s timings come from this run.
+- **180k re-run**: XGBoost and both PyTorch scripts were re-run unchanged on the full `dataset.csv` (18 × 10,000 = 180,000 samples, 36,000 test) on an RTX 4060 Laptop GPU machine. PyTorch ran on the GPU, XGBoost on the CPU.
 
 | Model | Script | Features | Test Accuracy | Train Time | Predict Time (test set) | Run |
 | :--- | :--- | :---: | :---: | :---: | :---: | :---: |
-| Random Forest (100 trees) | `train_rf.py` | 42 | 90.18% | – | – | 90k |
-| SVM (RBF, C=10) | `train_svm.py` | 42 | 90.88% | 69.39 s | 32.31 s | 90k |
-| XGBoost (300 trees, depth 8) | `train_xgboost.py` | 42 | 90.93% | 51.5 s | 0.46 s | 180k |
-| PyTorch MLP, full-batch (42→128→64→18) | `train_pytorch.py` | 42 | 43.88% ⚠️ | 0.9 s | – | 180k |
-| PyTorch deep MLP (72→512→256→128→64→18) | `train_pytorchV2.py` | 72 (v4) | 90.95% | 262 s | – | 180k |
-| **sklearn MLP (128, 64)** 🏆 | **`train_mlp.py`** | **42** | **91.27%** | **71.55 s** | **0.03 s** | **90k and 180k** |
+| Random Forest (100 trees) | `train_rf.py` | 42 | 90.18% | – | – | 90k (`results_summary.txt`) |
+| SVM (RBF, C=10) | `train_svm.py` | 42 | 90.88% | 69.39 s | 32.31 s | 90k (`results_summary.txt`) |
+| XGBoost (300 trees, depth 8) | `train_xgboost.py` | 42 | 90.93% | 51.5 s | 0.46 s | 180k re-run |
+| PyTorch v1, full batch (42→128→64→18) | `train_pytorch.py` | 42 | 43.88% ⚠️ | 0.9 s | – | 180k re-run |
+| PyTorch v2, 72 engineered features, batch 512 (72→512→256→128→64→18) | `train_pytorchV2.py` | 72 (v4) | 90.95% | ~262 s | – | 180k re-run |
+| **sklearn MLP (128, 64)** 🏆 | **`train_mlp.py`** | **42** | **91.27%** | **71.55 s** | **0.03 s** | **90k, and 180k (saved model)** |
 
-The sklearn MLP gets 91.27% on both the 90k baseline and the full 180k dataset; the shipped `champion_model.pkl` is the 180k model.
+The sklearn MLP scores 91.27% on the 90k run (`results_summary.txt`). The shipped `champion_model.pkl` was trained on the 180k dataset, and re-evaluating it on that dataset's 36,000-sample test split also gives 91.27%.
 
 ⚠️ `train_pytorch.py` passes the entire training set as one batch, so 50 epochs means only 50 weight updates and the network is still far from converged (final loss 2.21). `train_pytorchV2.py` fixes this with mini-batches of 512, feature scaling and 100 epochs.
 
 **Why the MLP was chosen:** it has the highest accuracy, and it predicts **about 1000× faster than the SVM** (0.03 s vs 32 s for the whole test set). For a real-time video loop, prediction speed matters as much as accuracy.
 
+### Per-class results (champion MLP)
+
+Re-evaluated from the saved `champion_model.pkl` on the 36,000-sample test split (2,000 per class):
+
+- **Macro F1: 0.914** (macro precision 0.916, macro recall 0.913)
+- **Best class:** `two_up`, F1 0.944
+- **Worst class:** `one`, F1 0.825, precision 0.768
+- Train accuracy is 92.00% vs 91.27% test, so the model is not overfitting.
+
+`one` acts as a catch-all class. Uncertain hands are often predicted as `one`; the most common cases are mute → one, rock → one, stop → one and two_up → one. The other notable mix-up is `stop` → `stop_inverted`, which differ only in orientation.
+
 ### How the champion was found
 
-Training was an iterative study rather than a single run:
-
-1. **Dataset scaling.** Models were first trained on 1,000 samples per class, then 2,000 and 5,000, and finally 10,000 per class. The production dataset (`dataset.csv`) has **180,000 samples** (18 × 10,000).
-2. **Feature-set iterations (v1 to v4).** Each feature set was compared using loss curves and confusion matrices to find which gestures were being confused with each other (see [Feature Engineering Experiments](#-feature-engineering-experiments)).
-3. **Hyperparameter tuning.** The MLP was tuned by changing the number of hidden layers, neurons per layer, activation functions and regularisation.
-4. **GPU experiments.** Deeper networks were trained in PyTorch on CUDA to speed up iteration and test whether more depth helps.
+1. **Dataset scaling.** An earlier run used 5,000 samples per class (90,000 total, `results_summary.txt`). The production dataset (`dataset.csv`) has 10,000 per class (**180,000 samples**).
+2. **Feature-set iterations (v1 to v4).** Each feature set was compared using the accuracy, classification report and confusion matrix printed by the training scripts (see [Feature Engineering Experiments](#-feature-engineering-experiments)).
+3. **Model comparison.** The final MLP configuration is (128, 64), ReLU, Adam. Other MLP configurations that were tried are not recorded in the repo.
+4. **GPU experiments.** The PyTorch networks were trained on CUDA to test whether more depth helps.
 
 ---
 
@@ -199,7 +222,7 @@ Three richer feature sets were built on top of the 42 normalised coordinates to 
 
 **Problem:** small frame-to-frame jitter in landmark positions made the label switch rapidly between similar gestures.
 
-**Fix:** a 12-frame majority-vote buffer (`deque` + `Counter`). The displayed label only changes once most recent frames agree.
+**Fix:** a 12-frame majority-vote buffer (`deque` + `Counter`). The displayed label is the most frequent prediction among the last 12 frames, so one-off wrong frames are ignored.
 </details>
 
 <details>
@@ -308,10 +331,12 @@ pip install pandas xgboost torch
 python webcam_check.py
 ```
 
+Illustrative output (your indices and resolutions will differ):
+
 ```
 === STARTING WEB CAM SLOT SCAN ===
-Index 0: WORKING | Resolution: 640x480
-Index 1: WORKING | Resolution: 1280x720
+Index 0: WORKING | Resolution: <width>x<height>
+Index 1: WORKING | Resolution: <width>x<height>
 Index 2: Closed/Unavailable
 ...
 ```
