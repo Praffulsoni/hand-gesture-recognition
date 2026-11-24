@@ -129,21 +129,29 @@ Trained with the Adam optimiser for up to 100 iterations (`random_state=42`).
 
 ### 4. Temporal smoothing
 
-Single-frame predictions can jump around because of sensor noise. The last **12 predictions** are kept in a `collections.deque`, and the UI shows the **most common** one (`collections.Counter`). The share of the buffer that agrees with it is shown as **Signal Stability** (e.g. 12/12 → 100%). When the hand leaves the frame the buffer drains one entry per frame, so the label fades out instead of disappearing instantly.
+Single-frame predictions can jump around because of sensor noise. The last **12 predictions** are kept in a `collections.deque`, and the UI shows the **most common** one (`collections.Counter`). The share of the buffer that agrees with it is shown as **Signal Stability** (e.g. 12/12 → 100%). When the hand leaves the frame the buffer drains one entry per frame, but the banner switches to `STANDBY` immediately on any frame where no hand is detected.
 
 ---
 
 ## 📊 Model Benchmarks
 
-All models use the same 42-feature dataset, an **80/20 stratified train/test split** and `random_state=42`. Results are from [`results_summary.txt`](results_summary.txt) (baseline run on 18 classes × 5,000 samples = 90,000 samples).
+All models use an **80/20 stratified train/test split** with `random_state=42`. The numbers come from two runs:
 
-| Model | Script | Test Accuracy | Train Time | Predict Time (test set) |
-| :--- | :--- | :---: | :---: | :---: |
-| Random Forest (100 trees) | `train_rf.py` | 90.18% | – | – |
-| SVM (RBF, C=10) | `train_svm.py` | 90.88% | 69.39 s | 32.31 s |
-| XGBoost (300 trees, depth 8) | `train_xgboost.py` | 90.93% | – | – |
-| PyTorch MLP (42→128→64→18) | `train_pytorch.py` | 91.13% | – | – |
-| **sklearn MLP (128, 64)** 🏆 | **`train_mlp.py`** | **91.27%** | **71.55 s** | **0.03 s** |
+- **Baseline (90k):** [`results_summary.txt`](results_summary.txt), 18 classes × 5,000 samples = 90,000 samples (18,000 test).
+- **Full (180k):** `dataset.csv`, 18 classes × 10,000 samples = 180,000 samples (36,000 test). Times are from an RTX 4060 Laptop GPU machine (PyTorch on GPU, the rest on CPU).
+
+| Model | Script | Features | Test Accuracy | Train Time | Predict Time (test set) | Run |
+| :--- | :--- | :---: | :---: | :---: | :---: | :---: |
+| Random Forest (100 trees) | `train_rf.py` | 42 | 90.18% | – | – | 90k |
+| SVM (RBF, C=10) | `train_svm.py` | 42 | 90.88% | 69.39 s | 32.31 s | 90k |
+| XGBoost (300 trees, depth 8) | `train_xgboost.py` | 42 | 90.93% | 51.5 s | 0.46 s | 180k |
+| PyTorch MLP, full-batch (42→128→64→18) | `train_pytorch.py` | 42 | 43.88% ⚠️ | 0.9 s | – | 180k |
+| PyTorch deep MLP (72→512→256→128→64→18) | `train_pytorchV2.py` | 72 (v4) | 90.95% | 262 s | – | 180k |
+| **sklearn MLP (128, 64)** 🏆 | **`train_mlp.py`** | **42** | **91.27%** | **71.55 s** | **0.03 s** | **90k and 180k** |
+
+The sklearn MLP gets 91.27% on both the 90k baseline and the full 180k dataset; the shipped `champion_model.pkl` is the 180k model.
+
+⚠️ `train_pytorch.py` passes the entire training set as one batch, so 50 epochs means only 50 weight updates and the network is still far from converged (final loss 2.21). `train_pytorchV2.py` fixes this with mini-batches of 512, feature scaling and 100 epochs.
 
 **Why the MLP was chosen:** it has the highest accuracy, and it predicts **about 1000× faster than the SVM** (0.03 s vs 32 s for the whole test set). For a real-time video loop, prediction speed matters as much as accuracy.
 
@@ -170,7 +178,7 @@ Three richer feature sets were built on top of the 42 normalised coordinates to 
 
 `train_pytorchV2.py` trains a deeper network (72→512→256→128→64→18, mini-batches of 512, `StandardScaler`, 100 epochs) on the v4 feature set.
 
-**Outcome:** the extra features did not beat the plain 42-coordinate baseline by a meaningful margin, and they would make live inference more complex. The **42-feature pipeline stays the production standard.**
+**Outcome:** the extra features did not beat the plain 42-coordinate baseline (the deep PyTorch model on v4 features reached 90.95% vs the MLP's 91.27%), and they would make live inference more complex. The **42-feature pipeline stays the production standard.**
 
 ---
 
@@ -233,7 +241,7 @@ gesture-detection/
 │   ├── train_rf.py               # Random Forest
 │   ├── train_svm.py              # SVM (RBF kernel)
 │   ├── train_xgboost.py          # XGBoost
-│   ├── train_pytorch.py          # PyTorch MLP on 42 features
+│   ├── train_pytorch.py          # PyTorch MLP on 42 features (full-batch, 50 updates)
 │   ├── train_pytorchV2.py        # Deeper PyTorch MLP on 72 features (v4)
 │   ├── verification.py           # Print details of the saved champion model
 │   └── results_summary.txt       # Recorded benchmark results
